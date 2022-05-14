@@ -1,0 +1,14 @@
+cycle_count: 2
+agent_count: 1000
+s_agent_count: 250
+k_min: 5
+k_max: 15
+expoA : 1
+expoG: 10
+s_type: M
+good_will_x: 0.5
+good_will_y: 0.5
+good_will_z: 0.5
+delta: 1
+scenario: 0
+V_0: 1
