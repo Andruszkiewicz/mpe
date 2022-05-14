@@ -1,0 +1,2 @@
+class ReputationAggregationEngine:
+    pass
