@@ -7,16 +7,33 @@ from rae_types.agent import Agent
 from rae_types.agent_type import AgentType
 import numpy as np
 
+from rae_types.service import Service
+
 
 def run_simulation(mpe_config: MPEConfig):
     agents: List[Agent] = create_agents(mpe_config)
 
-    for cycle in range(float(mpe_config.cycle_count)):
+    for cycle in range(mpe_config.cycle_count):
         agents_with_assigned_suppliers: List[Agent] = assign_suppliers(
             agents, mpe_config
         )
-        # service:Service = perform_services(agents_with_assigned_suppliers)
+        services: List[Service] = perform_services(agents_with_assigned_suppliers)
+        print(services)
+        print([(service.provided_services, service.reported_services) for service in services])
         # rae(service)
+
+
+def perform_services(agents: List[Agent]) -> List[Service]:
+    services = []
+    for agent in agents:
+        for supplier in agent.suppliers:
+            service: Service = Service(agent, supplier)
+            service.provided_services = service.define_provided_services()
+            service.reported_services = service.define_reported_services(
+                service.provided_services
+            )
+            services.append(service)
+    return services
 
 
 def create_agents(mpe_config: MPEConfig) -> List[Agent]:
