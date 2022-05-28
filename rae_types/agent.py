@@ -1,6 +1,7 @@
 from typing import Optional, List
 
 
+
 class Agent:
     def __init__(
         self,
@@ -8,10 +9,11 @@ class Agent:
         trust: float,
         agent_type: str,
         reputation: Optional[float] = None,
-        suppliers: List["Agent"] = None,
+        providers: List["Agent"] = None,
     ):
         self.id = id
         self.trust = trust
         self.agent_type = agent_type
         self.reputation = reputation
-        self.suppliers = suppliers
+        self.providers = providers
+

@@ -1,4 +1,4 @@
-cycle_count: 2
+cycle_count: 1000
 agent_count: 1000
 s_agent_count: 250
 k_min: 5

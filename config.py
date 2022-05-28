@@ -19,8 +19,8 @@ class MPEConfig(Updateable):
     s_agent_count: int
     k_min: int
     k_max: int
-    expoA: float
-    expoG: float
+    expoA: int
+    expoG: int
     s_type: str
     good_will_x: float
     good_will_y: float
