@@ -106,24 +106,28 @@ class ReputationAggregationEngine:
     def assign_trust(
         self,
         all_agents: List[Agent],
-        cluster_high,
-        cluster_low,
+        cluster_a,
+        cluster_b,
         mean_reported_services_per_provider,
     ):
         mean_reported_services_in_cluster_a = mean(
-            [mean_reported_services_per_provider[provider] for provider in cluster_high]
+            [mean_reported_services_per_provider[provider] for provider in cluster_a]
         )
         mean_reported_services_in_cluster_b = mean(
-            [mean_reported_services_per_provider[provider] for provider in cluster_low]
+            [mean_reported_services_per_provider[provider] for provider in cluster_b]
         )
 
         if mean_reported_services_in_cluster_a > mean_reported_services_in_cluster_b:
+            cluster_high = cluster_a
+            cluster_low = cluster_b
             trust_low = (
                 mean_reported_services_in_cluster_b
                 / mean_reported_services_in_cluster_a
             )
             trust_high = 1
         else:
+            cluster_high = cluster_b
+            cluster_low = cluster_a
             trust_low = (
                 mean_reported_services_in_cluster_a
                 / mean_reported_services_in_cluster_b
