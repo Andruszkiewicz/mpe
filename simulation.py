@@ -1,5 +1,6 @@
 import random
-from typing import List, Dict
+from collections import defaultdict
+from typing import List, Dict, DefaultDict
 from scipy.stats import uniform
 from config import MPEConfig
 from rae.rae import ReputationAggregationEngine
@@ -70,7 +71,7 @@ def perform_services(
     random_inverse_transform_distribution_G: List[float],
 ) -> Dict[Agent, List[Service]]:
 
-    agent_services: Dict[Agent, List[Service]] = {}
+    agent_services: DefaultDict = defaultdict(list)
 
     for agent in agents:
         for provider in agent.providers:
@@ -86,8 +87,9 @@ def perform_services(
                 service.provided_services
             )
             print(f"service.reported_services {service.reported_services}")
-
             agent_services[provider].append(service)
+
+    print(agent_services)
 
     return agent_services
 
