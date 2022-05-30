@@ -72,7 +72,7 @@ class Service:
         self, good_will: float, partner_trust: float
     ) -> float:
         # step function defined for (v, 1-x)
-        return float(np.heaviside(good_will, (1 - partner_trust)))
+        return float(np.heaviside(partner_trust, (1 - good_will)))
 
     def define_threshold_value_for_receiver(self) -> float:
         mpe_config = get_mpe_config()
@@ -101,4 +101,5 @@ class Service:
     def _generate_random_variable_from_distribution(
         self, distribution: List[float]
     ) -> float:
+        # check out seed influence
         return random.choice(distribution)

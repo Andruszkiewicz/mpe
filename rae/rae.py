@@ -33,13 +33,14 @@ class ReputationAggregationEngine:
     def report_services(
         self, agent_services: Dict[Agent, List[Service]], all_agents: List[Agent]
     ) -> Dict[Agent, float]:
+
         current_cycle: int = len(self.cycles_history.keys()) + 1
         self.cycles_history[current_cycle] = agent_services
 
         mean_reported_services_per_provider: Dict[Agent, float] = {}
 
         for provider, services in agent_services.items():
-            mean_reported_services: int = 0
+            mean_reported_services: List[float] = []
             for agent in all_agents:
                 (
                     last_interaction_cycle,
@@ -48,7 +49,7 @@ class ReputationAggregationEngine:
                 if last_interaction_cycle:
                     delta_interaction = current_cycle - last_interaction_cycle
                     if delta_interaction < current_cycle:
-                        mean_reported_services += (
+                        mean_reported_services.append(
                             agent.trust
                             * (get_mpe_config().delta ** delta_interaction)
                             * last_reported_services
@@ -56,7 +57,7 @@ class ReputationAggregationEngine:
                     else:
                         RuntimeError()
 
-            mean_reported_services_per_provider[provider] = mean_reported_services
+            mean_reported_services_per_provider[provider] = mean(mean_reported_services)
 
         return mean_reported_services_per_provider
 
@@ -68,9 +69,9 @@ class ReputationAggregationEngine:
         last_reported_services = None
 
         for cycle, agent_services in reversed(self.cycles_history.items()):
-            cycle_services_for_receiver = agent_services.get(provider)
-            if cycle_services_for_receiver:
-                for service in cycle_services_for_receiver:
+            cycle_services_for_provider = agent_services.get(provider)
+            if cycle_services_for_provider:
+                for service in cycle_services_for_provider:
                     if service.receiver == receiver:
                         last_cycle = cycle
                         last_reported_services = service.reported_services
