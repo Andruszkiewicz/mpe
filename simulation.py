@@ -2,13 +2,14 @@ import random
 from collections import defaultdict
 from typing import List, Dict, DefaultDict
 from scipy.stats import uniform
-from config import MPEConfig
+from config import MPEConfig, get_mpe_config
 from rae.rae import ReputationAggregationEngine
 from rae_types.agent import Agent
 from rae_types.agent_type import AgentType
 import numpy as np
 from rae_types.service import Service
 import matplotlib.pyplot as plt
+import csv
 
 
 def run_simulation(mpe_config: MPEConfig):
@@ -34,6 +35,29 @@ def run_simulation(mpe_config: MPEConfig):
         agents = rae.calculate_trust(agent_services, agents_with_assigned_providers)
 
     plot_trust_per_agent_type(rae.trust_history_per_agent_type)
+    save_results_to_csv(rae.trust_history_per_agent_type)
+
+
+def save_results_to_csv(trust_history_per_agent_type: Dict[int, Dict[str, float]]):
+    f = open("results.csv", "w")
+    writer = csv.writer(f)
+    mpe_config = get_mpe_config()
+    writer.writerow(("Config key", "Value"))
+    for key, value in mpe_config.__dict__.items():
+        writer.writerow((key, value))
+
+    writer.writerow([])
+    writer.writerow(("Cycle", "Trust Honest avg", "Trust Strategic avg"))
+
+    for cycle_count, trust_per_agent_type in trust_history_per_agent_type.items():
+        writer.writerow(
+            (
+                cycle_count,
+                trust_per_agent_type[AgentType.honest.name],
+                trust_per_agent_type[AgentType.strategic.name],
+            )
+        )
+    f.close()
 
 
 def plot_trust_per_agent_type(
@@ -50,8 +74,16 @@ def plot_trust_per_agent_type(
             trust_per_agent_type[AgentType.strategic.name]
         )
 
-    plt.plot(trust_history_per_agent_type.keys(), honest_agents_trust_through_cycles, label="Honest")
-    plt.plot(trust_history_per_agent_type.keys(), strategic_agents_trust_through_cycles, label="Strategic")
+    plt.plot(
+        trust_history_per_agent_type.keys(),
+        honest_agents_trust_through_cycles,
+        label="Honest",
+    )
+    plt.plot(
+        trust_history_per_agent_type.keys(),
+        strategic_agents_trust_through_cycles,
+        label="Strategic",
+    )
     plt.ylabel("Trust")
     plt.legend()
     plt.show()
@@ -82,14 +114,10 @@ def perform_services(
                 random_inverse_transform_distribution_G,
             )
             service.provided_services = service.define_provided_services()
-            print(f"service.provided_services {service.provided_services}")
             service.reported_services = service.define_reported_services(
                 service.provided_services
             )
-            print(f"service.reported_services {service.reported_services}")
             agent_services[provider].append(service)
-
-    print(agent_services)
 
     return agent_services
 
