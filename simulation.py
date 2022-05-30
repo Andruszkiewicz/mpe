@@ -73,7 +73,6 @@ def perform_services(
     agent_services: Dict[Agent, List[Service]] = {}
 
     for agent in agents:
-        services = []
         for provider in agent.providers:
             service: Service = Service(
                 agent,
@@ -82,11 +81,13 @@ def perform_services(
                 random_inverse_transform_distribution_G,
             )
             service.provided_services = service.define_provided_services()
+            print(f"service.provided_services {service.provided_services}")
             service.reported_services = service.define_reported_services(
                 service.provided_services
             )
-            services.append(service)
-            agent_services[provider] = services
+            print(f"service.reported_services {service.reported_services}")
+
+            agent_services[provider].append(service)
 
     return agent_services
 
