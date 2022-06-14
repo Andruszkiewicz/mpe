@@ -14,40 +14,34 @@ class Service:
         self,
         receiver: Agent,
         provider: Agent,
-        random_inverse_transform_distribution_A: List[float],
-        random_inverse_transform_distribution_G: List[float],
+        available_services: float,
+        receiver_efficiency: float,
     ):
         self.receiver: Agent = receiver
         self.provider: Agent = provider
-        self.random_inverse_transform_distribution_A = (
-            random_inverse_transform_distribution_A
+        self.available_services = (
+            available_services
         )
-        self.random_inverse_transform_distribution_G = (
-            random_inverse_transform_distribution_G
+        self.receiver_efficiency = (
+            receiver_efficiency
         )
         self.provided_services: Optional[float] = None
         self.reported_services: Optional[float] = None
 
     def define_provided_services(self):
-        available_services = self._generate_random_variable_from_distribution(
-            self.random_inverse_transform_distribution_A
-        )
-        provider_threshold = self.define_threshold_value_for_provider()
+        provider_threshold = self.define_threshold_value_for_provider() #provider honest receiver strategic
         provided_services = self.define_provider_politics(
-            available_services, provider_threshold
+            self.available_services, provider_threshold
         )
 
         return provided_services
 
     def define_reported_services(self, provided_services: float):
-        receiver_efficiency = self._generate_random_variable_from_distribution(
-            self.random_inverse_transform_distribution_G
-        )
         receiver_threshold = self.define_threshold_value_for_receiver()
-        received_services = self.define_receiver_politics(
-            provided_services, receiver_efficiency, receiver_threshold
+        reported_services = self.define_receiver_politics(
+            provided_services, self.receiver_efficiency, receiver_threshold
         )
-        return received_services
+        return reported_services
 
     def define_provider_politics(
         self, available_services: float, provider_threshold: float
@@ -71,13 +65,15 @@ class Service:
     def define_threshold_for_honest_agent(
         self, good_will: float, partner_trust: float
     ) -> float:
-        # step function defined for (v, 1-x)
-        return float(np.heaviside(partner_trust, (1 - good_will)))
+        if (1 - good_will) >= partner_trust:
+            return 1.0
+        else:
+            return 0.0
 
     def define_threshold_value_for_receiver(self) -> float:
         mpe_config = get_mpe_config()
         if self.receiver.agent_type == AgentType.strategic.name:
-            if mpe_config.scenario == 0:
+            if mpe_config.scenario == 0 or self.provider.agent_type == AgentType.honest:
                 return mpe_config.good_will_z
             else:
                 return 1.0
@@ -89,7 +85,7 @@ class Service:
     def define_threshold_value_for_provider(self) -> float:
         mpe_config = get_mpe_config()
         if self.provider.agent_type == AgentType.strategic.name:
-            if mpe_config.scenario == 0:
+            if mpe_config.scenario == 0 or self.receiver.agent_type == AgentType.honest:
                 return mpe_config.good_will_y
             else:
                 return 1.0

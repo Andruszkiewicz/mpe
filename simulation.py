@@ -1,6 +1,6 @@
 import random
 from collections import defaultdict
-from typing import List, Dict, DefaultDict
+from typing import List, Dict, DefaultDict, Tuple
 from scipy.stats import uniform
 from config import MPEConfig, get_mpe_config
 from rae.rae import ReputationAggregationEngine
@@ -18,14 +18,14 @@ def run_simulation(mpe_config: MPEConfig):
 
     for cycle in range(mpe_config.cycle_count):
         print(cycle)
+        agents_with_assigned_providers, all_providers_count = assign_providers(
+            agents, mpe_config
+        )
         random_inverse_transform_distribution_A = generate_random_inverse_distribuant_distribution(
-            mpe_config.expoA
+            mpe_config.expoA, all_providers_count
         )
         random_inverse_transform_distribution_G = generate_random_inverse_distribuant_distribution(
-            mpe_config.expoG
-        )
-        agents_with_assigned_providers: List[Agent] = assign_providers(
-            agents, mpe_config
+            mpe_config.expoG, all_providers_count
         )
         agent_services: Dict[Agent, List[Service]] = perform_services(
             agents_with_assigned_providers,
@@ -89,8 +89,10 @@ def plot_trust_per_agent_type(
     plt.show()
 
 
-def generate_random_inverse_distribuant_distribution(expo: int) -> List[float]:
-    U = uniform.rvs(size=100000)
+def generate_random_inverse_distribuant_distribution(
+    expo: int, all_providers_count: int
+) -> List[float]:
+    U = uniform.rvs(size=all_providers_count)
     random_inverse_distribuant_distribution = []
     for u in U:
         random_inverse_distribuant_distribution.append(u ** (1 / expo))
@@ -99,25 +101,32 @@ def generate_random_inverse_distribuant_distribution(expo: int) -> List[float]:
 
 def perform_services(
     agents: List[Agent],
-    random_inverse_transform_distribution_A: List[float],
+    random_inverse_transform_distribution_A: List[float],  # [1,2,3,4,5,6,7,8]
     random_inverse_transform_distribution_G: List[float],
 ) -> Dict[Agent, List[Service]]:
 
     agent_services: DefaultDict = defaultdict(list)
 
+    provider_count = 0
+
     for agent in agents:
         for provider in agent.providers:
             service: Service = Service(
-                agent,
-                provider,
-                random_inverse_transform_distribution_A,
-                random_inverse_transform_distribution_G,
+                receiver=agent,
+                provider=provider,
+                available_services=random_inverse_transform_distribution_A[
+                    provider_count
+                ],
+                receiver_efficiency=random_inverse_transform_distribution_G[
+                    provider_count
+                ],
             )
             service.provided_services = service.define_provided_services()
             service.reported_services = service.define_reported_services(
                 service.provided_services
             )
             agent_services[provider].append(service)
+            provider_count += 1
 
     return agent_services
 
@@ -137,17 +146,20 @@ def create_agents(mpe_config: MPEConfig) -> List[Agent]:
     return s_agents + h_agents
 
 
-def assign_providers(agents: List[Agent], mpe_config: MPEConfig) -> List[Agent]:
+def assign_providers(
+    agents: List[Agent], mpe_config: MPEConfig
+) -> Tuple[List[Agent], int]:
     agents_with_assigned_providers: List[Agent] = []
-
+    all_providers_count = 0
     for agent in agents:
         providers_count = np.random.randint(mpe_config.k_min, mpe_config.k_max)
+        all_providers_count += providers_count
         agent.providers = draw_providers(
             recipient=agent, agents=agents, count=providers_count
         )
         agents_with_assigned_providers.append(agent)
 
-    return agents_with_assigned_providers
+    return agents_with_assigned_providers, all_providers_count
 
 
 def draw_providers(recipient: Agent, agents: List[Agent], count: int) -> List[Agent]:
